@@ -483,7 +483,7 @@ const TableView = () => {
                 className="w-full py-1 px-2 text-sm bg-background border border-input rounded input-focus"
                 placeholder="Price"
                 min="0"
-                step="1" // Use step="1" for integers only
+                step="1" 
               />
             </div>
             <div>
@@ -569,7 +569,7 @@ const TableView = () => {
                             defaultValue={sku?.price}
                             className="w-20 py-1 px-2 text-sm text-right bg-background border border-input rounded input-focus"
                             min="0"
-                            step="1" // Use step="1" for integers only
+                            step="1"
                           />
                           <select
                             defaultValue={sku?.currency}
@@ -729,7 +729,7 @@ const TableView = () => {
                                 handleInputChange(skuId, month, "forecastQty", e.target.value)
                               }
                               className="w-16 py-1 px-2 text-sm text-right bg-background border border-input rounded input-focus"
-                              step="1" // Use step="1" for integers only
+                              step="1"
                             />
                           </td>
                         );
@@ -788,7 +788,7 @@ const TableView = () => {
                                       : "text-muted-foreground border-input/50"
                                   )}
                                   placeholder="—"
-                                  step="1" // Use step="1" for integers only
+                                  step="1"
                                 />
                               </td>
                             );
