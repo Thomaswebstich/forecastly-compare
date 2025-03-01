@@ -23,6 +23,19 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash, Edit, Save, X } from "lucide-react";
 
+interface MonthlyData {
+  forecastQty: number;
+  actualQty: number | null;
+}
+
+interface TotalsResult {
+  forecastQty: number;
+  actualQty: number | null;
+  forecastValue: number;
+  actualValue: number | null;
+  hasActual: boolean;
+}
+
 const TableView = () => {
   const { filteredData, filters, updateForecastData } = useForecast();
   const [editingSKU, setEditingSKU] = useState<string | null>(null);
@@ -92,9 +105,9 @@ const TableView = () => {
   };
   
   // Calculate yearly totals for a SKU
-  const calculateTotals = (monthlyData: { forecastQty: number; actualQty: number | null }[], skuId: string) => {
+  const calculateTotals = (monthlyData: MonthlyData[], skuId: string): TotalsResult => {
     return monthlyData.reduce(
-      (acc, curr) => {
+      (acc: TotalsResult, curr) => {
         const forecastQty = curr.forecastQty;
         const actualQty = curr.actualQty;
         

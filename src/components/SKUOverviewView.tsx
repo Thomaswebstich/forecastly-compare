@@ -124,9 +124,9 @@ const SKUOverviewView = () => {
               <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value.toFixed(0)}%`} />
               <Tooltip 
                 formatter={(value, name) => {
-                  if (name === "variance") return [`${value.toFixed(2)}%`, "Variance"];
+                  if (name === "variance") return [`${Number(value).toFixed(2)}%`, "Variance"];
                   return [formatCurrency(value as number, filters.displayCurrency), 
-                    name.charAt(0).toUpperCase() + name.slice(1)];
+                    String(name).charAt(0).toUpperCase() + String(name).slice(1)];
                 }}
               />
               <Legend />
