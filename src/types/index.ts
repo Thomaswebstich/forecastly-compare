@@ -58,3 +58,13 @@ export type ExchangeRate = {
   to: Currency;
   rate: number;
 };
+
+export type SKUOverviewData = {
+  skuId: string;
+  name: string;
+  category: string;
+  customer: string;
+  forecastTotal: number;
+  actualTotal: number | null;
+  variance: number | null; // Percentage difference between forecast and actual
+};

@@ -6,7 +6,8 @@ import {
   ForecastData,
   Version,
   ChartData,
-  Currency
+  Currency,
+  SKUOverviewData
 } from "@/types";
 import { 
   filterForecastData, 
@@ -14,7 +15,11 @@ import {
   getMonthName,
   groupByQuarter,
   groupByYear,
-  calculateValue
+  calculateValue,
+  skus,
+  categories,
+  customers,
+  forecastData
 } from "@/lib/data";
 
 interface ForecastContextType {
@@ -25,6 +30,7 @@ interface ForecastContextType {
   versions: Version[];
   compareMode: boolean;
   compareVersionId: string | null;
+  skuOverviewData: SKUOverviewData[];
   updateFilters: (newFilters: Partial<FilterState>) => void;
   setTimeView: (view: TimeView) => void;
   updateForecastData: (updatedItem: ForecastData) => void;
@@ -46,7 +52,7 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
   const [timeView, setTimeView] = useState<TimeView>("monthly");
   const [compareMode, setCompareMode] = useState(false);
   const [compareVersionId, setCompareVersionId] = useState<string | null>(null);
-  const [forecastData, setForecastData] = useState<ForecastData[]>([]);
+  const [forecastDataState, setForecastDataState] = useState<ForecastData[]>([]);
   
   // Get filtered data
   const filteredData = filterForecastData(
@@ -89,11 +95,118 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
     } else if (timeView === "quarterly") {
       return groupByQuarter(filteredData, filters.displayCurrency);
     } else {
-      return groupByYear(filteredData, filters.displayCurrency);
+      // In yearly view, show multiple years side-by-side if data is available
+      // Instead of just one year, we'll collect data for multiple years
+      // Find all available years in the forecast data
+      const availableYears = new Set<number>();
+      forecastData.forEach(item => {
+        availableYears.add(item.year);
+      });
+      
+      const yearlyData: ChartData[] = [];
+      
+      // Sort years chronologically
+      const sortedYears = Array.from(availableYears).sort();
+      
+      // For each year, calculate totals
+      sortedYears.forEach(year => {
+        const yearData = forecastData.filter(
+          item => item.year === year && 
+          item.versionId === filters.versionId &&
+          (filters.categoryId === null || 
+            skus.some(sku => sku.id === item.skuId && sku.categoryId === filters.categoryId)) &&
+          (filters.customerId === null || 
+            skus.some(sku => sku.id === item.skuId && sku.customerId === filters.customerId))
+        );
+        
+        if (yearData.length === 0) return;
+        
+        let totalForecast = 0;
+        let totalActual = 0;
+        let hasActual = false;
+        
+        yearData.forEach(item => {
+          totalForecast += calculateValue(item.forecastQty, item.skuId, filters.displayCurrency);
+          
+          if (item.actualQty !== null) {
+            totalActual += calculateValue(item.actualQty, item.skuId, filters.displayCurrency);
+            hasActual = true;
+          }
+        });
+        
+        yearlyData.push({
+          label: year.toString(),
+          forecast: totalForecast,
+          actual: hasActual ? totalActual : null
+        });
+      });
+      
+      return yearlyData;
     }
   };
   
   const chartData = generateChartData();
+  
+  // Generate SKU overview data
+  const generateSKUOverviewData = (): SKUOverviewData[] => {
+    // Get all forecast data for the current version
+    const allData = forecastData.filter(item => 
+      item.versionId === filters.versionId && 
+      item.year === filters.year
+    );
+    
+    // Group by SKU
+    const skuGroups = new Map<string, { 
+      forecastTotal: number; 
+      actualTotal: number | null; 
+      hasActuals: boolean;
+    }>();
+    
+    allData.forEach(item => {
+      if (!skuGroups.has(item.skuId)) {
+        skuGroups.set(item.skuId, { 
+          forecastTotal: 0, 
+          actualTotal: 0, 
+          hasActuals: false 
+        });
+      }
+      
+      const group = skuGroups.get(item.skuId)!;
+      const forecastValue = calculateValue(item.forecastQty, item.skuId, filters.displayCurrency);
+      group.forecastTotal += forecastValue;
+      
+      if (item.actualQty !== null) {
+        const actualValue = calculateValue(item.actualQty, item.skuId, filters.displayCurrency);
+        group.actualTotal += actualValue;
+        group.hasActuals = true;
+      }
+    });
+    
+    // Transform to final format
+    return Array.from(skuGroups.entries())
+      .map(([skuId, data]) => {
+        const sku = skus.find(s => s.id === skuId);
+        if (!sku) return null;
+        
+        const category = categories.find(c => c.id === sku.categoryId);
+        const customer = customers.find(c => c.id === sku.customerId);
+        
+        return {
+          skuId,
+          name: sku.name,
+          category: category?.name || "Unknown",
+          customer: customer?.name || "Unknown",
+          forecastTotal: data.forecastTotal,
+          actualTotal: data.hasActuals ? data.actualTotal : null,
+          variance: data.hasActuals && data.forecastTotal > 0
+            ? ((data.actualTotal! - data.forecastTotal) / data.forecastTotal) * 100
+            : null
+        };
+      })
+      .filter(item => item !== null) as SKUOverviewData[];
+  };
+  
+  const skuOverviewData = generateSKUOverviewData();
   
   // Update filters
   const updateFilters = (newFilters: Partial<FilterState>) => {
@@ -102,7 +215,7 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
   
   // Update forecast data
   const updateForecastData = (updatedItem: ForecastData) => {
-    setForecastData(prev => {
+    setForecastDataState(prev => {
       const existingIndex = prev.findIndex(item => item.id === updatedItem.id);
       if (existingIndex >= 0) {
         const updated = [...prev];
@@ -111,6 +224,14 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
       }
       return [...prev, updatedItem];
     });
+    
+    // Also update the main forecast data array
+    const existingIndex = forecastData.findIndex(item => item.id === updatedItem.id);
+    if (existingIndex >= 0) {
+      forecastData[existingIndex] = updatedItem;
+    } else {
+      forecastData.push(updatedItem);
+    }
   };
   
   // Toggle compare mode
@@ -139,6 +260,7 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
         versions,
         compareMode,
         compareVersionId,
+        skuOverviewData,
         updateFilters,
         setTimeView,
         updateForecastData,

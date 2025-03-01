@@ -1,15 +1,19 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ForecastProvider } from "@/context/ForecastContext";
 import Header from "@/components/Header";
 import TimeToggle from "@/components/TimeToggle";
 import VersionControl from "@/components/VersionControl";
 import ChartView from "@/components/ChartView";
 import TableView from "@/components/TableView";
+import SKUOverviewView from "@/components/SKUOverviewView";
 import Filters from "@/components/Filters";
 import CurrencySelector from "@/components/CurrencySelector";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("forecast");
+  
   return (
     <ForecastProvider>
       <div className="min-h-screen bg-background">
@@ -27,11 +31,26 @@ const Index = () => {
               <VersionControl />
             </div>
             
-            {/* Chart */}
-            <ChartView />
-            
-            {/* Table */}
-            <TableView />
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full md:w-auto grid grid-cols-2 md:flex md:flex-row">
+                <TabsTrigger value="forecast">Detailed Forecast</TabsTrigger>
+                <TabsTrigger value="overview">SKU Overview</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="forecast" className="space-y-8 mt-6">
+                {/* Chart */}
+                <ChartView />
+                
+                {/* Table */}
+                <TableView />
+              </TabsContent>
+              
+              <TabsContent value="overview" className="space-y-8 mt-6">
+                {/* SKU Overview */}
+                <SKUOverviewView />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>

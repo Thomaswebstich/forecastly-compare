@@ -73,7 +73,8 @@ const TableView = () => {
     field: "forecastQty" | "actualQty",
     value: string
   ) => {
-    const numValue = parseFloat(value);
+    // Convert to integer instead of float
+    const numValue = parseInt(value, 10);
     if (isNaN(numValue)) return;
     
     const itemToUpdate = filteredData.find(
@@ -469,7 +470,7 @@ const TableView = () => {
                 className="w-full py-1 px-2 text-sm bg-background border border-input rounded input-focus"
                 placeholder="Price"
                 min="0"
-                step="0.01"
+                step="1" // Use step="1" for integers only
               />
             </div>
             <div>
@@ -555,7 +556,7 @@ const TableView = () => {
                             defaultValue={sku?.price}
                             className="w-20 py-1 px-2 text-sm text-right bg-background border border-input rounded input-focus"
                             min="0"
-                            step="0.01"
+                            step="1" // Use step="1" for integers only
                           />
                           <select
                             defaultValue={sku?.currency}
@@ -704,24 +705,22 @@ const TableView = () => {
                       </td>
                     </tr>
                     <tr className="table-row-animate hover:bg-muted/30">
-                      {monthlyData.map(({ month, forecastQty }) => (
-                        <td key={month} className="px-2 py-2 text-right">
-                          <input
-                            type="number"
-                            value={forecastQty}
-                            onChange={(e) =>
-                              handleInputChange(skuId, month, "forecastQty", e.target.value)
-                            }
-                            className="w-16 py-1 px-2 text-sm text-right bg-background border border-input rounded input-focus"
-                          />
-                        </td>
-                      ))}
-                      {/* Fill in missing months */}
-                      {Array.from({ length: 12 - monthlyData.length }).map((_, i) => (
-                        <td key={i} className="px-2 py-2 text-right">
-                          <span className="text-sm text-muted-foreground">—</span>
-                        </td>
-                      ))}
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
+                        const monthData = monthlyData.find(m => m.month === month);
+                        return (
+                          <td key={month} className="px-2 py-2 text-right">
+                            <input
+                              type="number"
+                              value={monthData ? monthData.forecastQty : ""}
+                              onChange={(e) =>
+                                handleInputChange(skuId, month, "forecastQty", e.target.value)
+                              }
+                              className="w-16 py-1 px-2 text-sm text-right bg-background border border-input rounded input-focus"
+                              step="1" // Use step="1" for integers only
+                            />
+                          </td>
+                        );
+                      })}
                       <td className="px-4 py-3 text-right text-sm font-medium">
                         {totals.forecastQty.toLocaleString()}
                       </td>
@@ -734,7 +733,9 @@ const TableView = () => {
                       </td>
                     </tr>
                     <tr className="table-row-animate bg-muted/10 hover:bg-muted/30">
-                      {monthlyData.map(({ month, forecastQty }) => {
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
+                        const monthData = monthlyData.find(m => m.month === month);
+                        const forecastQty = monthData ? monthData.forecastQty : 0;
                         const value = calculateValue(forecastQty, skuId, filters.displayCurrency);
                         return (
                           <td key={month} className="px-2 py-2 text-right text-sm">
@@ -742,12 +743,6 @@ const TableView = () => {
                           </td>
                         );
                       })}
-                      {/* Fill in missing months */}
-                      {Array.from({ length: 12 - monthlyData.length }).map((_, i) => (
-                        <td key={i} className="px-2 py-2 text-right">
-                          <span className="text-sm text-muted-foreground">—</span>
-                        </td>
-                      ))}
                       <td className="px-4 py-3 text-right text-sm font-medium">
                         {formatCurrency(totals.forecastValue, filters.displayCurrency)}
                       </td>
@@ -763,30 +758,28 @@ const TableView = () => {
                           >
                             <span className="text-xs">Actual Qty</span>
                           </td>
-                          {monthlyData.map(({ month, actualQty }) => (
-                            <td key={month} className="px-2 py-2 text-right border-t border-border">
-                              <input
-                                type="number"
-                                value={actualQty === null ? "" : actualQty}
-                                onChange={(e) =>
-                                  handleInputChange(skuId, month, "actualQty", e.target.value)
-                                }
-                                className={cn(
-                                  "w-16 py-1 px-2 text-sm text-right bg-muted/50 border rounded input-focus",
-                                  actualQty !== null && actualQty > 0 
-                                    ? "text-foreground border-input" 
-                                    : "text-muted-foreground border-input/50"
-                                )}
-                                placeholder="—"
-                              />
-                            </td>
-                          ))}
-                          {/* Fill in missing months */}
-                          {Array.from({ length: 12 - monthlyData.length }).map((_, i) => (
-                            <td key={i} className="px-2 py-2 text-right border-t border-border">
-                              <span className="text-sm text-muted-foreground">—</span>
-                            </td>
-                          ))}
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
+                            const monthData = monthlyData.find(m => m.month === month);
+                            return (
+                              <td key={month} className="px-2 py-2 text-right border-t border-border">
+                                <input
+                                  type="number"
+                                  value={monthData && monthData.actualQty !== null ? monthData.actualQty : ""}
+                                  onChange={(e) =>
+                                    handleInputChange(skuId, month, "actualQty", e.target.value)
+                                  }
+                                  className={cn(
+                                    "w-16 py-1 px-2 text-sm text-right bg-muted/50 border rounded input-focus",
+                                    monthData && monthData.actualQty !== null && monthData.actualQty > 0 
+                                      ? "text-foreground border-input" 
+                                      : "text-muted-foreground border-input/50"
+                                  )}
+                                  placeholder="—"
+                                  step="1" // Use step="1" for integers only
+                                />
+                              </td>
+                            );
+                          })}
                           <td className="px-4 py-3 text-right text-sm font-medium border-t border-border">
                             {totals.actualQty !== null 
                               ? totals.actualQty.toLocaleString() 
@@ -802,7 +795,9 @@ const TableView = () => {
                           >
                             <span className="text-xs">Actual Value ({filters.displayCurrency})</span>
                           </td>
-                          {monthlyData.map(({ month, actualQty }) => {
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
+                            const monthData = monthlyData.find(m => m.month === month);
+                            const actualQty = monthData && monthData.actualQty !== null ? monthData.actualQty : null;
                             const value = actualQty !== null 
                               ? calculateValue(actualQty, skuId, filters.displayCurrency)
                               : null;
@@ -814,12 +809,6 @@ const TableView = () => {
                               </td>
                             );
                           })}
-                          {/* Fill in missing months */}
-                          {Array.from({ length: 12 - monthlyData.length }).map((_, i) => (
-                            <td key={i} className="px-2 py-2 text-right">
-                              <span className="text-sm text-muted-foreground">—</span>
-                            </td>
-                          ))}
                           <td className="px-4 py-3 text-right text-sm font-medium">
                             {totals.actualValue !== null 
                               ? formatCurrency(totals.actualValue, filters.displayCurrency)
