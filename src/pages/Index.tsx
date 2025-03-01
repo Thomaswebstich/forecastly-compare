@@ -7,6 +7,7 @@ import VersionControl from "@/components/VersionControl";
 import ChartView from "@/components/ChartView";
 import TableView from "@/components/TableView";
 import Filters from "@/components/Filters";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const Index = () => {
   return (
@@ -18,8 +19,9 @@ const Index = () => {
           <div className="space-y-8 animate-slide-up">
             {/* Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 py-2">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <TimeToggle />
+                <CurrencySelector />
                 <Filters />
               </div>
               <VersionControl />

@@ -5,14 +5,16 @@ import {
   TimeView, 
   ForecastData,
   Version,
-  ChartData
+  ChartData,
+  Currency
 } from "@/types";
 import { 
   filterForecastData, 
   versions, 
   getMonthName,
   groupByQuarter,
-  groupByYear
+  groupByYear,
+  calculateValue
 } from "@/lib/data";
 
 interface ForecastContextType {
@@ -38,6 +40,7 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
     customerId: null,
     year: 2024,
     versionId: versions[versions.length - 1].id,
+    displayCurrency: 'USD'
   });
   
   const [timeView, setTimeView] = useState<TimeView>("monthly");
@@ -67,10 +70,12 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
         }
         
         const entry = monthlyData.get(item.month)!;
-        entry.forecast += item.forecastValue;
+        const forecastValue = calculateValue(item.forecastQty, item.skuId, filters.displayCurrency);
+        entry.forecast += forecastValue;
         
-        if (item.actualValue !== null) {
-          entry.actual = (entry.actual || 0) + item.actualValue;
+        if (item.actualQty !== null) {
+          const actualValue = calculateValue(item.actualQty, item.skuId, filters.displayCurrency);
+          entry.actual = (entry.actual === null ? actualValue : entry.actual + actualValue);
         }
       });
       
@@ -82,9 +87,9 @@ export const ForecastProvider = ({ children }: { children: ReactNode }) => {
           actual: values.actual
         }));
     } else if (timeView === "quarterly") {
-      return groupByQuarter(filteredData);
+      return groupByQuarter(filteredData, filters.displayCurrency);
     } else {
-      return groupByYear(filteredData);
+      return groupByYear(filteredData, filters.displayCurrency);
     }
   };
   

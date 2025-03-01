@@ -9,11 +9,15 @@ export type Customer = {
   name: string;
 };
 
+export type Currency = 'USD' | 'EUR' | 'THB';
+
 export type SKU = {
   id: string;
   name: string;
   categoryId: string;
   customerId: string;
+  price: number;
+  currency: Currency;
 };
 
 export type ForecastData = {
@@ -21,8 +25,8 @@ export type ForecastData = {
   skuId: string;
   month: number; // 1-12
   year: number;
-  forecastValue: number;
-  actualValue: number | null;
+  forecastQty: number;
+  actualQty: number | null;
   versionId: string;
 };
 
@@ -46,4 +50,11 @@ export type FilterState = {
   customerId: string | null;
   year: number;
   versionId: string;
+  displayCurrency: Currency;
+};
+
+export type ExchangeRate = {
+  from: Currency;
+  to: Currency;
+  rate: number;
 };
