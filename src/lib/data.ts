@@ -265,6 +265,24 @@ export const addSKU = (sku: Omit<SKU, 'id'>): SKU => {
     id: `sku${skus.length + 1}`
   };
   skus.push(newSKU);
+  
+  // Add forecast data for the new SKU
+  for (let year of [2024, 2025]) {
+    for (let month = 1; month <= 12; month++) {
+      for (let version of versions) {
+        forecastData.push({
+          id: `${newSKU.id}-${year}-${month}-${version.id}`,
+          skuId: newSKU.id,
+          month,
+          year,
+          forecastQty: 0,
+          actualQty: null,
+          versionId: version.id
+        });
+      }
+    }
+  }
+  
   return newSKU;
 };
 
@@ -288,9 +306,9 @@ export const deleteSKU = (id: string): boolean => {
     skus.splice(index, 1);
     
     // Also remove associated forecast data
-    const dataToKeep = forecastData.filter(item => item.skuId !== id);
+    const newForecastData = forecastData.filter(item => item.skuId !== id);
     forecastData.length = 0;
-    forecastData.push(...dataToKeep);
+    forecastData.push(...newForecastData);
     
     return true;
   }

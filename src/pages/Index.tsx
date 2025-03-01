@@ -10,6 +10,7 @@ import SKUOverviewView from "@/components/SKUOverviewView";
 import Filters from "@/components/Filters";
 import CurrencySelector from "@/components/CurrencySelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("forecast");
@@ -53,6 +54,7 @@ const Index = () => {
             </Tabs>
           </div>
         </main>
+        <Toaster />
       </div>
     </ForecastProvider>
   );

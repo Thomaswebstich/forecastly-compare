@@ -22,6 +22,7 @@ import { Currency, SKU } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash, Edit, Save, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MonthlyData {
   forecastQty: number;
@@ -44,6 +45,7 @@ const TableView = () => {
   const [newCategory, setNewCategory] = useState<string | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<string | null>(null);
   const [newCustomer, setNewCustomer] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Group data by SKU
   const groupedData = React.useMemo(() => {
@@ -150,7 +152,11 @@ const TableView = () => {
       });
     } else {
       if (newSKU.name && newSKU.categoryId && newSKU.customerId && newSKU.price > 0) {
-        addSKU(newSKU);
+        const addedSku = addSKU(newSKU);
+        toast({
+          title: "SKU Added",
+          description: `${addedSku.name} has been added successfully.`
+        });
         setNewSKU(null);
       }
     }
@@ -158,14 +164,38 @@ const TableView = () => {
   
   // Handle editing SKU
   const handleSaveSKU = (id: string, updatedSKU: Partial<Omit<SKU, 'id'>>) => {
-    updateSKU(id, updatedSKU);
-    setEditingSKU(null);
+    const result = updateSKU(id, updatedSKU);
+    if (result) {
+      toast({
+        title: "SKU Updated",
+        description: `${result.name} has been updated successfully.`
+      });
+      setEditingSKU(null);
+    } else {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the SKU.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Handle deleting SKU
   const handleDeleteSKU = (id: string) => {
     if (window.confirm("Are you sure you want to delete this SKU?")) {
-      deleteSKU(id);
+      const success = deleteSKU(id);
+      if (success) {
+        toast({
+          title: "SKU Deleted",
+          description: "The SKU has been deleted successfully."
+        });
+      } else {
+        toast({
+          title: "Delete Failed",
+          description: "There was an error deleting the SKU.",
+          variant: "destructive"
+        });
+      }
     }
   };
   
@@ -173,6 +203,10 @@ const TableView = () => {
   const handleAddCategory = () => {
     if (newCategory) {
       addCategory(newCategory);
+      toast({
+        title: "Category Added",
+        description: `${newCategory} has been added successfully.`
+      });
       setNewCategory(null);
     } else {
       setNewCategory("");
@@ -180,15 +214,36 @@ const TableView = () => {
   };
   
   const handleSaveCategory = (id: string, name: string) => {
-    updateCategory(id, name);
-    setEditingCategory(null);
+    const result = updateCategory(id, name);
+    if (result) {
+      toast({
+        title: "Category Updated",
+        description: `${result.name} has been updated successfully.`
+      });
+      setEditingCategory(null);
+    } else {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the category.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleDeleteCategory = (id: string) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       const success = deleteCategory(id);
-      if (!success) {
-        alert("Cannot delete a category that is still in use by SKUs");
+      if (success) {
+        toast({
+          title: "Category Deleted",
+          description: "The category has been deleted successfully."
+        });
+      } else {
+        toast({
+          title: "Delete Failed",
+          description: "Category is still in use by SKUs and cannot be deleted.",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -197,6 +252,10 @@ const TableView = () => {
   const handleAddCustomer = () => {
     if (newCustomer) {
       addCustomer(newCustomer);
+      toast({
+        title: "Customer Added",
+        description: `${newCustomer} has been added successfully.`
+      });
       setNewCustomer(null);
     } else {
       setNewCustomer("");
@@ -204,15 +263,36 @@ const TableView = () => {
   };
   
   const handleSaveCustomer = (id: string, name: string) => {
-    updateCustomer(id, name);
-    setEditingCustomer(null);
+    const result = updateCustomer(id, name);
+    if (result) {
+      toast({
+        title: "Customer Updated",
+        description: `${result.name} has been updated successfully.`
+      });
+      setEditingCustomer(null);
+    } else {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the customer.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleDeleteCustomer = (id: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       const success = deleteCustomer(id);
-      if (!success) {
-        alert("Cannot delete a customer that is still in use by SKUs");
+      if (success) {
+        toast({
+          title: "Customer Deleted",
+          description: "The customer has been deleted successfully."
+        });
+      } else {
+        toast({
+          title: "Delete Failed",
+          description: "Customer is still in use by SKUs and cannot be deleted.",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -249,6 +329,10 @@ const TableView = () => {
                 onClick={() => {
                   if (newCategory.trim()) {
                     addCategory(newCategory);
+                    toast({
+                      title: "Category Added",
+                      description: `${newCategory} has been added successfully.`
+                    });
                     setNewCategory(null);
                   }
                 }}
@@ -352,6 +436,10 @@ const TableView = () => {
                 onClick={() => {
                   if (newCustomer.trim()) {
                     addCustomer(newCustomer);
+                    toast({
+                      title: "Customer Added",
+                      description: `${newCustomer} has been added successfully.`
+                    });
                     setNewCustomer(null);
                   }
                 }}
@@ -507,7 +595,11 @@ const TableView = () => {
                 size="sm" 
                 onClick={() => {
                   if (newSKU.name && newSKU.price > 0) {
-                    addSKU(newSKU);
+                    const addedSku = addSKU(newSKU);
+                    toast({
+                      title: "SKU Added",
+                      description: `${addedSku.name} has been added successfully.`
+                    });
                     setNewSKU(null);
                   }
                 }}
