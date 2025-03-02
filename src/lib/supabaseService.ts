@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Category, 
@@ -17,7 +18,7 @@ export const exchangeRates: ExchangeRate[] = [
   { from: 'USD', to: 'EUR', rate: 0.93 },
   { from: 'EUR', to: 'EUR', rate: 1 },
   { from: 'THB', to: 'EUR', rate: 0.026 },
-  { from: 'USD', to 'THB', rate: 35.7 },
+  { from: 'USD', to: 'THB', rate: 35.7 },
   { from: 'EUR', to: 'THB', rate: 38.5 },
   { from: 'THB', to: 'THB', rate: 1 },
 ];
