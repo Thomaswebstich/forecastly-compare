@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Category, 
@@ -27,30 +26,6 @@ export const exchangeRates: ExchangeRate[] = [
 export const convertCurrency = (amount: number, from: Currency, to: Currency): number => {
   const rate = exchangeRates.find(r => r.from === from && r.to === to)?.rate || 1;
   return amount * rate;
-};
-
-// Format currency
-export const formatCurrency = (amount: number, currency: Currency): string => {
-  if (currency === 'THB') {
-    // For THB, round up for thousand and above
-    if (amount >= 1_000_000) {
-      return `฿${(Math.ceil(amount / 1_000_000)).toLocaleString()}M`;
-    } else if (amount >= 1000) {
-      return `฿${(Math.ceil(amount / 1000)).toLocaleString()}K`;
-    } else {
-      return `฿${Math.ceil(amount).toLocaleString()}`;
-    }
-  }
-  
-  // For USD and EUR, use standard formatting
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  });
-  
-  return formatter.format(amount);
 };
 
 // Categories
@@ -614,4 +589,28 @@ export const groupByYear = async (data: ForecastData[], targetCurrency: Currency
   };
   
   return [yearly];
+};
+
+// Format currency
+export const formatCurrency = (amount: number, currency: Currency): string => {
+  if (currency === 'THB') {
+    // For THB, round up for thousand and above
+    if (amount >= 1_000_000) {
+      return `฿${(Math.ceil(amount / 1_000_000)).toLocaleString()}M`;
+    } else if (amount >= 1000) {
+      return `฿${(Math.ceil(amount / 1000)).toLocaleString()}K`;
+    } else {
+      return `฿${Math.ceil(amount).toLocaleString()}`;
+    }
+  }
+  
+  // For USD and EUR, use standard formatting
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  return formatter.format(amount);
 };
